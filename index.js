@@ -2,11 +2,14 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
+const cors = require('cors')
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 const BASEURL = '/api/persons'
 
 app.use(bodyParser.json())
+app.use(cors())
+app.use(express.static('build'))
 
 morgan.token('postData', (req, res) => 
   Object.keys(req.body).length ? JSON.stringify(req.body) : '')
@@ -77,17 +80,20 @@ app.post(BASEURL, (req, res) => {
   //console.log('post: ', req.headers)
   //console.log(req.get('Content-Type').toLowerCase())
   //console.log('post: ', req.get('Content-Type').toLowerCase() === 'application/json')
-  const contentHeader = req.get('Content-Type')
-  if (contentHeader) {
-    if (contentHeader.toLowerCase() !== 'application/json') {
-      return res.status(400).json(
-        generateErrorJson('Unsupported Content-Type, must be \'application/json\''))
-    }
-  } else {
-    return res.status(400).json(
-      generateErrorJson('No headers included'))
-  }
-
+  //const contentHeader = req.get('Content-Type')
+  //if (contentHeader) {
+  //  console.log('oli headerit: ', contentHeader)
+  //  if (contentHeader.toLowerCase() !== 'application/json') {
+  //    console.log('vaikkakin vaaria')
+  //    return res.status(400).json(
+  //      generateErrorJson('Unsupported Content-Type, must be \'application/json\''))
+  //  }
+  //} else {
+  //  console.log('EI headereita')
+  //  return res.status(400).json(
+  //    generateErrorJson('No headers included'))
+  //}
+  //console.log('tultiin tanne')
   const body = req.body
 
   if (body.name === undefined) {
