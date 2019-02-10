@@ -37,12 +37,14 @@ let persons = [
     number: '09-784232',
   },
 ]
+
 const getRandInt = () => Math.floor(Math.random() * (Math.pow(2, 31) - 1))
 const generateId = () => {
   //js tukee suurempia int:eja, mutta tieda sitten jos kaytetaan tietokantoja jne..?
   //implementoi tarkastus, onko id jo kaytossa! =>
   return getRandInt()
 }
+
 const generateErrorJson = (message) => {
   //return {error: field.concat(' missing')}
   return {error: message}
@@ -121,7 +123,11 @@ app.post(BASEURL, (req, res) => {
   res.json(newPerson)
 })
 
-//app.use(unknownEndpoint)
+const unknownEndpoint = (req, res) => {
+  res.status(404).send(generateErrorJson('unknown endpoint'))
+}
+
+app.use(unknownEndpoint)
 
 app.listen(PORT, () => {
   console.log(`puhluettelo backend running and listening on port ${PORT}`)
