@@ -1,0 +1,55 @@
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "JAVA Mies"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "number": "999-1235556"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Pekka TestiHenkilö",
+  "number": "050-5551234"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Arto Hellas",
+  "number": "234-23222342"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Uusi Nimi",
+  "number": "041-21423123"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+
+
+{
+  "name": "Ei toimi",
+  "number": "999-2134359"
+}
