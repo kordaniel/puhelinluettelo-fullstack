@@ -1,4 +1,6 @@
-require('dotenv').config()
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
 
 const express = require('express')
 const app = express()
@@ -103,9 +105,13 @@ app.post(BASEURL, (req, res, next) => {
     number: body.number,
   })
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson.toJSON())
-  }).catch(error => next(error))
+  person
+    .save()
+    .then(savedPerson => savedPerson.toJSON())
+    .then(savedAndFormattedPerson => {
+      res.json(savedAndFormattedPerson)
+    })
+    .catch(error => next(error))
 
 })
 
@@ -117,10 +123,14 @@ app.use(unknownEndpoint)
 const errorHandler = (error, req, res, next) => {
   console.log('VIRHETILANNE: ', error.message)
   //jos virhe on tietyn tyyppinen, kasitellaan se taalla
-  //Tassa tapauksessa CastError-poikkeuksesta, eli virheellinen olioid
+  //Tassa tapauksessa CastError-poikkeuksesta, eli virheellinen olioid,
+  //ja laajennuksen seurauksena kasitellaan tassa useampi erilainen poikkeustyyppi
   if (error.name === 'CastError' && error.kind == 'ObjectId') {
     return res.status(400).send(generateErrorJson('malformatted id'))
+  } else if(error.name === 'ValidationError') {
+    return res.status(400).json(generateErrorJson(error.message))
   }
+  
   //siirretaan virheenkasittely eteenpain
   //(expressin oletusarvoisen virheenkasittelijan hoidettavaksi)
   next(error)
