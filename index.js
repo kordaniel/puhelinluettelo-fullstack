@@ -17,7 +17,7 @@ app.use(express.static('build'))
 app.use(bodyParser.json())
 app.use(cors())
 
-morgan.token('postData', (req, res) => 
+morgan.token('postData', (req, res) =>
   Object.keys(req.body).length ? JSON.stringify(req.body) : '')
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :postData'))
 /*
@@ -44,34 +44,37 @@ let persons = [
   },
 ]
 */
+/*ESLINT PRKLE, TAMA ON HYVA FUNKTIOPARI
 const getRandInt = () => Math.floor(Math.random() * (Math.pow(2, 31) - 1))
 const generateId = () => {
   //js tukee suurempia int:eja, mutta tieda sitten jos kaytetaan tietokantoja jne..?
   //implementoi tarkastus, onko id jo kaytossa! =>
   return getRandInt()
 }
+*/
 
 const generateErrorJson = (message) => {
-  return {error: message}
+  return { error: message }
 }
 
 app.get(BASEURL, (req, res, next) => {
-  Person.find({}).then(persons => {
-    res.json(persons.map(p => p.toJSON()))
-  })
-  .catch(error => next(error))
+  Person.find({})
+    .then(persons => {
+      res.json(persons.map(p => p.toJSON()))
+    })
+    .catch(error => next(error))
 })
 
 app.get(BASEURL + '/:id', (req, res, next) => {
   Person.findById(req.params.id)
-  .then(person => {
-    if (person) {
-      res.json(person.toJSON())
-    } else {
-      res.status(404).end()
-    }
-  })
-  .catch(error => next(error))
+    .then(person => {
+      if (person) {
+        res.json(person.toJSON())
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
 app.delete(BASEURL + '/:id', (req, res, next) => {
@@ -91,15 +94,31 @@ app.get('/info', (req, res, next) => {
     .catch(error => next(error))
 })
 
+app.put(BASEURL + '/:id', (req, res, next) => {
+  const body = req.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => updatedPerson.toJSON())
+    .then(updatedAndFormattedPerson => {
+      res.json(updatedAndFormattedPerson)
+    })
+    .catch(error => next(error))
+})
+
 app.post(BASEURL, (req, res, next) => {
   const body = req.body
-  
+
   if (body.name === undefined) {
     return res.status(400).json(generateErrorJson('name missing'))
   } else if (body.number === undefined) {
     return res.status(400).json(generateErrorJson('number missing'))
   }
-  
+
   const person = new Person({
     name: body.name,
     number: body.number,
@@ -125,12 +144,16 @@ const errorHandler = (error, req, res, next) => {
   //jos virhe on tietyn tyyppinen, kasitellaan se taalla
   //Tassa tapauksessa CastError-poikkeuksesta, eli virheellinen olioid,
   //ja laajennuksen seurauksena kasitellaan tassa useampi erilainen poikkeustyyppi
+
+  //TASSA Eslint valittaa etta kaytossa on vain ==, kun pitaisi olla ===
+  //materiaalissa oli kuitenkin kaytossa == ja jatan sen taten tallaiseksi
+  //kun nayttaa toimivan. Testailen myohemmin paremmin!
   if (error.name === 'CastError' && error.kind == 'ObjectId') {
     return res.status(400).send(generateErrorJson('malformatted id'))
   } else if(error.name === 'ValidationError') {
     return res.status(400).json(generateErrorJson(error.message))
   }
-  
+
   //siirretaan virheenkasittely eteenpain
   //(expressin oletusarvoisen virheenkasittelijan hoidettavaksi)
   next(error)
