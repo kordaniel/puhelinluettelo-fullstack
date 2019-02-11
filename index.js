@@ -1,8 +1,12 @@
+require('dotenv').config()
+
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+
+const Person = require('./models/person')
 
 const PORT = process.env.PORT || 3001
 const BASEURL = '/api/persons'
@@ -51,19 +55,31 @@ const generateErrorJson = (message) => {
 }
 
 app.get(BASEURL, (req, res) => {
-  res.json(persons)
+  //res.json(persons)
+  Person.find({}).then(persons => {
+    res.json(persons.map(p => p.toJSON()))
+  })
 })
 
 app.get(BASEURL + '/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(p => p.id === id)
   /*
-  if (person) {
-    res.json(person)
-  } else {
+  Person.find({ _id: req.params.id }).then(persons => {
+    res.json(persons.map(p => p.toJSON()))
+  }).catch(err => {
+    console.log('ERROR ERROR when getting single person from DB: ', err.message)
     res.status(404).end()
-  }*/
+  })*/
+  Person.findById(req.params.id).then(person => {
+    res.json(person.toJSON())
+  }).catch(err => {
+    console.log('ERROR ERROR when getting single person from DB: ', err.message)
+    res.status(404).end()
+  })
+  /*
+  //const id = Number(req.params.id)
+  const person = persons.find(p => p.id === id)
   person ? res.json(person) : res.status(404).end()
+  */
 })
 
 app.delete(BASEURL + '/:id', (req, res) => {
@@ -73,9 +89,17 @@ app.delete(BASEURL + '/:id', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  const message = `<p>Puhelinluettelossa on ${persons.length} henkilön tiedot</p>
-                  <p>${new Date().toString()}</p>`
-  res.send(message)
+  Person.countDocuments({})
+    .then(count => {
+      res.send(`<p>Puhelinluettelossa on ${count} henkilön tiedot</p>
+                <p>${new Date().toString()}</p>`)
+    })
+    .catch(err => {
+      console.log('ERROR ERROR when trying to count amount of persons in DB: ', err.message)
+    })
+  //const message = `<p>Puhelinluettelossa on ${persons.length} henkilön tiedot</p>
+  //                <p>${new Date().toString()}</p>`
+  //res.send(message)
 })
 
 app.post(BASEURL, (req, res) => {
@@ -96,6 +120,8 @@ app.post(BASEURL, (req, res) => {
   //    generateErrorJson('No headers included'))
   //}
   //console.log('tultiin tanne')
+  
+  /* TALLENTAA LISTAAN, ENNEN MONGOOSEA!
   const body = req.body
 
   if (body.name === undefined) {
@@ -121,6 +147,24 @@ app.post(BASEURL, (req, res) => {
   //console.log(newPerson)
   persons = persons.concat(newPerson)
   res.json(newPerson)
+  */
+  const body = req.body
+  
+  if (body.name === undefined) {
+    return res.status(400).json(generateErrorJson('name missing'))
+  } else if (body.number === undefined) {
+    return res.status(400).json(generateErrorJson('number missing'))
+  }
+  
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
+
+  person.save().then(savedPerson => {
+    res.json(savedPerson.toJSON())
+  })
+
 })
 
 const unknownEndpoint = (req, res) => {
